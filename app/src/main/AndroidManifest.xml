@@ -41,11 +41,12 @@
             android:screenOrientation="portrait" />
         <activity android:name=".activity.FileDirPickActivity" />
 
-        <!-- 升级 -->
+        <!-- Bugly升级 -->
         <activity
             android:name="com.tencent.bugly.beta.ui.BetaActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|locale"
             android:theme="@android:style/Theme.Translucent" />
+
         <!-- 7.0 -->
         <provider
             android:name="com.tencent.bugly.beta.utils.BuglyFileProvider"
