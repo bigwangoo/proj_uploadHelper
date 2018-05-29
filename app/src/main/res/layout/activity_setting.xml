@@ -225,7 +225,7 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
-                    android:text="Meters位置："
+                    android:text="下载地址："
                     android:textColor="@android:color/black" />
 
                 <TextView
