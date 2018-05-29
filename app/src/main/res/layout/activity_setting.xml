@@ -7,159 +7,235 @@
 
     <include layout="@layout/layout_title" />
 
-    <LinearLayout
-        android:id="@+id/llID"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@drawable/selector_bg_setting_item"
-        android:orientation="horizontal"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="抄表人ID："
-            android:textColor="@android:color/black" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvID"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="2.5"
-            android:gravity="center_vertical"
-            tools:text="--" />
-    </LinearLayout>
+            <LinearLayout
+                android:id="@+id/llID"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/selector_bg_setting_item"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_margin="16dp"
-        android:background="@android:color/background_dark" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="抄表人ID："
+                    android:textColor="@android:color/black" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:text="原文件位置：" />
+                <TextView
+                    android:id="@+id/tvID"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2.5"
+                    android:gravity="center_vertical"
+                    tools:text="--" />
+            </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/llGroup"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@drawable/selector_bg_setting_item"
-        android:orientation="horizontal"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_margin="16dp"
+                android:background="@android:color/background_dark" />
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="Group位置："
-            android:textColor="@android:color/black" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:text="原文件位置：" />
 
-        <TextView
-            android:id="@+id/tvGroup"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="2.5"
-            android:gravity="center_vertical"
-            tools:text="--" />
-    </LinearLayout>
+            <LinearLayout
+                android:id="@+id/llGroup"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/selector_bg_setting_item"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
 
-    <LinearLayout
-        android:id="@+id/llMeters"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="2dp"
-        android:background="@drawable/selector_bg_setting_item"
-        android:orientation="horizontal"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Group位置："
+                    android:textColor="@android:color/black" />
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="Meters位置："
-            android:textColor="@android:color/black" />
+                <TextView
+                    android:id="@+id/tvGroup"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2.5"
+                    android:gravity="center_vertical"
+                    tools:text="--" />
+            </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvMeters"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="2.5"
-            android:gravity="center_vertical"
-            tools:text="--" />
-    </LinearLayout>
+            <LinearLayout
+                android:id="@+id/llMeters"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="2dp"
+                android:background="@drawable/selector_bg_setting_item"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_margin="16dp"
-        android:background="@android:color/background_dark" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Meters位置："
+                    android:textColor="@android:color/black" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:text="下载后文件位置：" />
+                <TextView
+                    android:id="@+id/tvMeters"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2.5"
+                    android:gravity="center_vertical"
+                    tools:text="--" />
+            </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/llGroupDownload"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@drawable/selector_bg_setting_item"
-        android:orientation="horizontal"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_margin="16dp"
+                android:background="@android:color/background_dark" />
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="Group位置："
-            android:textColor="@android:color/black" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:text="下载后文件位置：" />
 
-        <TextView
-            android:id="@+id/tvGroupDownload"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="2.5"
-            android:gravity="center_vertical"
-            tools:text="--" />
-    </LinearLayout>
+            <LinearLayout
+                android:id="@+id/llGroupDownload"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/selector_bg_setting_item"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
 
-    <LinearLayout
-        android:id="@+id/llMetersDownload"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_marginTop="2dp"
-        android:background="@drawable/selector_bg_setting_item"
-        android:orientation="horizontal"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Group位置："
+                    android:textColor="@android:color/black" />
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="Meters位置："
-            android:textColor="@android:color/black" />
+                <TextView
+                    android:id="@+id/tvGroupDownload"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2.5"
+                    android:gravity="center_vertical"
+                    tools:text="--" />
+            </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvMetersDownload"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="2.5"
-            android:gravity="center_vertical"
-            tools:text="--" />
-    </LinearLayout>
+            <LinearLayout
+                android:id="@+id/llMetersDownload"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="2dp"
+                android:background="@drawable/selector_bg_setting_item"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Meters位置："
+                    android:textColor="@android:color/black" />
+
+                <TextView
+                    android:id="@+id/tvMetersDownload"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2.5"
+                    android:gravity="center_vertical"
+                    tools:text="--" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_margin="16dp"
+                android:background="@android:color/background_dark" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:text="默认服务器：" />
+
+            <LinearLayout
+                android:id="@+id/llServer"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/selector_bg_setting_item"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="接口地址："
+                    android:textColor="@android:color/black" />
+
+                <TextView
+                    android:id="@+id/tvServer"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2.5"
+                    android:gravity="center_vertical"
+                    tools:text="--" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llDownload"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="2dp"
+                android:background="@drawable/selector_bg_setting_item"
+                android:orientation="horizontal"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="Meters位置："
+                    android:textColor="@android:color/black" />
+
+                <TextView
+                    android:id="@+id/tvDownload"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2.5"
+                    android:gravity="center_vertical"
+                    tools:text="--" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

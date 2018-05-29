@@ -26,9 +26,11 @@ import java.util.List;
 public class FileDirPickActivity extends BaseActivity implements BaseQuickAdapter.OnItemClickListener {
 
     public static final String FILE_RESULT = "file";
+
     private RecyclerView rv;
     private FileDirListAdapter mAdapter;
     private List<String> mPaths = new ArrayList<>();
+
     private String rootPath = "/";
     private String curPath = "/";
     private TextView tvPath;
@@ -57,7 +59,10 @@ public class FileDirPickActivity extends BaseActivity implements BaseQuickAdapte
         tvPath = findViewById(R.id.tvPath);
         tvPath.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                getFileDirs(new File(curPath).getParent());
+                try {
+                    getFileDirs(new File(curPath).getParent());
+                } catch (Exception e) {
+                }
             }
         });
 
@@ -74,44 +79,52 @@ public class FileDirPickActivity extends BaseActivity implements BaseQuickAdapte
     @Override
     public void onGetNecessaryPermissions() {
         super.onGetNecessaryPermissions();
-
         rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         curPath = rootPath;
+
         getFileDirs(rootPath);
     }
 
     @Override
     public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-        getFileDirs(mPaths.get(position));
+        try {
+            String path = mPaths.get(position);
+            getFileDirs(path);
+        } catch (Exception e) {
+
+        }
     }
 
     private void getFileDirs(String filePath) {
-        mPaths.clear();
-
         curPath = filePath;
         tvPath.setText("当前路径：" + curPath);
         //设置向上是否可用
-        if (rootPath.equals(filePath)) {
+        if (rootPath != null && rootPath.equals(filePath)) {
             tvPath.setEnabled(false);
         } else {
             tvPath.setEnabled(true);
         }
 
-        File f = new File(filePath);
-        File[] files = f.listFiles();
-        //判断当前下是否有文件夹
-        if (files.length <= 0) {
-            return;
-        }
-        for (int i = 0; i < files.length; i++) {
-            //过滤一遍 1.是否为文件夹 //2.是否可访问
-            if (files[i].isDirectory() && files[i].listFiles() != null) {
-                mPaths.add(files[i].getPath());
+        try {
+            File f = new File(filePath);
+            File[] files = f.listFiles();
+            //判断当前下是否有文件夹
+            if (files.length <= 0) {
+                return;
             }
-        }
-        // 排序
-        Collections.sort(mPaths);
 
-        mAdapter.setNewData(mPaths);
+            mPaths.clear();
+            //过滤一遍 1.是否为文件夹 //2.是否可访问
+            for (int i = 0; i < files.length; i++) {
+                if (files[i].isDirectory() && files[i].listFiles() != null) {
+                    mPaths.add(files[i].getPath());
+                }
+            }
+            // 排序
+            Collections.sort(mPaths);
+            mAdapter.setNewData(mPaths);
+        } catch (Exception e) {
+
+        }
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.test.uploadhelper.CusApplication;
+import com.test.uploadhelper.common.service.SoapService;
 
 /**
  * Created by wangyd on 2018/5/27.
@@ -29,6 +30,22 @@ public class SharedPrefHelper {
             }
         }
         return instance;
+    }
+
+    public String getServerUrl() {
+        return sp.getString("server_url", SoapService.URL);
+    }
+
+    public void setServerUrl(String url) {
+        sp.edit().putString("server_url", url).commit();
+    }
+
+    public String getDownloadUrl() {
+        return sp.getString("download_url", SoapService.DOWN_URL);
+    }
+
+    public void setDownloadUrl(String url) {
+        sp.edit().putString("download_url", url).commit();
     }
 
     /*抄表人ID*/

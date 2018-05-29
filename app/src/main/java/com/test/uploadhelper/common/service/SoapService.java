@@ -2,6 +2,8 @@ package com.test.uploadhelper.common.service;
 
 import android.util.Log;
 
+import com.test.uploadhelper.utils.SharedPrefHelper;
+
 import org.ksoap2.SoapEnvelope;
 import org.ksoap2.serialization.SoapObject;
 import org.ksoap2.serialization.SoapSerializationEnvelope;
@@ -18,11 +20,11 @@ public class SoapService {
 
     private static final String TAG = SoapService.class.getSimpleName();
 
-    // 文件下载临时地址目录
-    public static final String DOWN_URL = "http://123.184.42.167:5588/DownFiles/";
+    // 默认测试接口临时地址
+    public static String URL = "http://123.184.42.167:5588/WebServices.asmx";
+    // 默认文件下载临时地址目录
+    public static String DOWN_URL = "http://123.184.42.167:5588/DownFiles/";
 
-    // 测试接口临时地址
-    private static final String URL = "http://123.184.42.167:5588/WebServices.asmx";
     // 命名空间
     private static final String NAMESPACE = "http://tempuri.org/";
     // SoapAction
@@ -50,6 +52,8 @@ public class SoapService {
     }
 
     public String askForResult(SoapObject paramObject, String methodName) {
+        URL = SharedPrefHelper.getInstance().getServerUrl();
+
         Log.e(TAG, "askForResult: " + methodName);
 
         SoapObject result = null;
@@ -61,12 +65,12 @@ public class SoapService {
         envelope.setOutputSoapObject(paramObject);
 
         String soapAction = SOAP_ACTION + methodName;
-        HttpTransportSE transportSE = new HttpTransportSE(URL, 2 * 60 * 1000);
+        HttpTransportSE transportSE = new HttpTransportSE(URL, 1 * 60 * 1000);
         try {
             transportSE.debug = true;
             transportSE.call(soapAction, envelope);
             result = (SoapObject) envelope.bodyIn;
-            Log.e(TAG, "askForResult: " + result);
+            // Log.e(TAG, "askForResult: " + result);
         } catch (Exception e) {
             //调试用
             StringWriter sw = new StringWriter();

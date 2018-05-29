@@ -66,6 +66,8 @@ public abstract class BaseActivity extends AppCompatActivity {
             mProgressDialog.setMessage("加载中...");
             mProgressDialog.setCancelable(true);
             mProgressDialog.setCanceledOnTouchOutside(false);
+        } else {
+            mProgressDialog.setMessage("加载中...");
         }
         mProgressDialog.show();
     }

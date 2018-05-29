@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:text="当前路径："
+        android:text="当前路径(点击返回上一级)："
         android:textColor="@android:color/black" />
 
     <android.support.v7.widget.RecyclerView

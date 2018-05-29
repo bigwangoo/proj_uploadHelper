@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.test.uploadhelper.R;
+import com.test.uploadhelper.common.service.SoapService;
 import com.test.uploadhelper.utils.SharedPrefHelper;
 import com.test.uploadhelper.utils.UriUtils;
 
@@ -32,7 +33,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     public static final Integer RC_FILE_SELECT_NOTE_D = 103;
 
     private SharedPrefHelper spHelper;
-    private TextView tvID, tvGroup, tvMeters, tvGroupDownload, tvMetersDownload;
+    private TextView tvID, tvGroup, tvMeters, tvGroupDownload, tvMetersDownload, tvServer, tvDownload;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,11 +56,7 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                         .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                spHelper.setID("");
-                                spHelper.setNoteBookGroupPath("");
-                                spHelper.setMetersPath("");
-                                spHelper.setNoteBookGroupDownloadPath("");
-                                spHelper.setMetersDownloadPath("");
+                                resetSetting();
                                 setData();
                             }
                         })
@@ -73,15 +70,30 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         tvMeters = findViewById(R.id.tvMeters);
         tvGroupDownload = findViewById(R.id.tvGroupDownload);
         tvMetersDownload = findViewById(R.id.tvMetersDownload);
+        tvMetersDownload = findViewById(R.id.tvMetersDownload);
+        tvServer = findViewById(R.id.tvServer);
+        tvDownload = findViewById(R.id.tvDownload);
 
         findViewById(R.id.llID).setOnClickListener(this);
         findViewById(R.id.llGroup).setOnClickListener(this);
         findViewById(R.id.llMeters).setOnClickListener(this);
         findViewById(R.id.llGroupDownload).setOnClickListener(this);
         findViewById(R.id.llMetersDownload).setOnClickListener(this);
+        findViewById(R.id.tvServer).setOnClickListener(this);
+        findViewById(R.id.tvDownload).setOnClickListener(this);
 
         requestNecessaryPermission();
         setData();
+    }
+
+    private void resetSetting() {
+        spHelper.setID("");
+        spHelper.setNoteBookGroupPath("");
+        spHelper.setMetersPath("");
+        spHelper.setNoteBookGroupDownloadPath("");
+        spHelper.setMetersDownloadPath("");
+        spHelper.setServerUrl("");
+        spHelper.setDownloadUrl("");
     }
 
     private void setData() {
@@ -90,6 +102,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         tvMeters.setText(spHelper.getMetersPath());
         tvGroupDownload.setText(spHelper.getNoteBookGroupDownloadPath());
         tvMetersDownload.setText(spHelper.getMetersDownloadPath());
+        tvServer.setText(spHelper.getServerUrl());
+        tvDownload.setText(spHelper.getDownloadUrl());
     }
 
     @Override
@@ -109,6 +123,12 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 break;
             case R.id.llMetersDownload:
                 onFileDownloadPickClick(RC_FILE_SELECT_METERS_D);
+                break;
+            case R.id.tvServer:
+                onServerUrlClick();
+                break;
+            case R.id.tvDownload:
+                onDownloadUrlClick();
                 break;
             default:
                 break;
@@ -130,6 +150,48 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                         String trim = edtInput.getText().toString().trim();
                         spHelper.setID(trim);
                         tvID.setText(trim);
+                    }
+                }).setNegativeButton("取消", null)
+                .create().show();
+    }
+
+    private void onServerUrlClick() {
+        final View view = LayoutInflater.from(this).inflate(R.layout.layout_dialog_input, null);
+        final EditText edtInput = (EditText) view.findViewById(R.id.edtInput);
+        edtInput.setText(spHelper.getServerUrl());
+
+        new AlertDialog.Builder(this)
+                .setTitle("设置接口服务地址")
+                .setView(view)
+                .setPositiveButton("确定", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+
+                        String trim = edtInput.getText().toString().trim();
+                        spHelper.setServerUrl(trim);
+                        tvServer.setText(trim);
+                    }
+                }).setNegativeButton("取消", null)
+                .create().show();
+    }
+
+    private void onDownloadUrlClick() {
+        final View view = LayoutInflater.from(this).inflate(R.layout.layout_dialog_input, null);
+        final EditText edtInput = (EditText) view.findViewById(R.id.edtInput);
+        edtInput.setText(spHelper.getDownloadUrl());
+
+        new AlertDialog.Builder(this)
+                .setTitle("设置下载服务地址")
+                .setView(view)
+                .setPositiveButton("确定", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+
+                        String trim = edtInput.getText().toString().trim();
+                        spHelper.setDownloadUrl(trim);
+                        tvDownload.setText(trim);
                     }
                 }).setNegativeButton("取消", null)
                 .create().show();

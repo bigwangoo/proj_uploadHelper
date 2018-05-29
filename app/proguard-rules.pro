@@ -22,11 +22,6 @@
 
 -keep class com.**.model.**{*;}
 
-
--dontwarn com.tencent.bugly.**
--keep public class com.tencent.bugly.**{*;}
--keep class android.support.**{*;}
-
 #okhttputils
 -dontwarn com.zhy.http.**
 -keep class com.zhy.http.**{*;}
@@ -36,3 +31,16 @@
 #okio
 -dontwarn okio.**
 -keep class okio.**{*;}
+
+-dontwarn com.tencent.bugly.**
+-keep public class com.tencent.bugly.**{*;}
+-keep class android.support.**{*;}
+
+-keep class com.chad.library.adapter.** {
+*;
+}
+-keep public class * extends com.chad.library.adapter.base.BaseQuickAdapter
+-keep public class * extends com.chad.library.adapter.base.BaseViewHolder
+-keepclassmembers  class **$** extends com.chad.library.adapter.base.BaseViewHolder {
+     <init>(...);
+}
