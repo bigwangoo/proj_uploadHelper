@@ -52,8 +52,6 @@ public class SoapService {
     }
 
     public String askForResult(SoapObject paramObject, String methodName) {
-        URL = SharedPrefHelper.getInstance().getServerUrl();
-
         Log.e(TAG, "askForResult: " + methodName);
 
         SoapObject result = null;
@@ -65,6 +63,7 @@ public class SoapService {
         envelope.setOutputSoapObject(paramObject);
 
         String soapAction = SOAP_ACTION + methodName;
+        URL = SharedPrefHelper.getInstance().getServerUrl();
         HttpTransportSE transportSE = new HttpTransportSE(URL, 1 * 60 * 1000);
         try {
             transportSE.debug = true;

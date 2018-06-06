@@ -1,6 +1,7 @@
 package com.test.uploadhelper.adapter;
 
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
@@ -35,6 +36,17 @@ public class MeterListAdapter extends BaseQuickAdapter<Map<String, Object>, Base
             readnum = item.get("READNUM").toString();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (TextUtils.isEmpty(meterid)) {
+            try {
+                meterid = item.get("meterid").toString();
+                usercode = item.get("usercode").toString();
+                groupid = item.get("groupid").toString();
+                cbzt = item.get("cbzt").toString();
+                readnum = item.get("readnum").toString();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         helper.setText(R.id.tvItem0, meterid)
                 .setText(R.id.tvItem1, usercode)

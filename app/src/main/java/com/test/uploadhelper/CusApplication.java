@@ -33,10 +33,6 @@ public class CusApplication extends Application {
                 .readTimeout(60 * 1000L, TimeUnit.MILLISECONDS)
                 .build();
         OkHttpUtils.initClient(okHttpClient);
-
-        // 初始化配置
-        SharedPrefHelper.getInstance().setServerUrl(SoapService.URL);
-        SharedPrefHelper.getInstance().setDownloadUrl(SoapService.DOWN_URL);
     }
 
     public static Application getApplication() {

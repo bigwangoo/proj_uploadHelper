@@ -167,19 +167,46 @@ public class MainActivity extends BaseActivity {
                 for (int i = 0; i < meters.size(); i++) {
                     Map<String, Object> map = meters.get(i);
                     try {
-                        int cbzt = (int) map.get("CBZT");
-                        if (cbzt == 1) {
+                        String cbzt = null;
+                        String cbzt2 = null;
+                        if (map.containsKey("CBZT")) {
+                            cbzt = map.get("CBZT").toString();
+                        }
+                        if (map.containsKey("cbzt")) {
+                            cbzt2 = map.get("cbzt").toString();
+                        }
+                        if ("1".equals(cbzt) || "1".equals(cbzt2)) {
                             newData.add(map);
+                            //Log.e(TAG, "run: " + cbzt);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
-                // 分批上传
+
                 int size = newData.size();
+                if (size <= 0) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            hideProgressBar();
+
+                            new AlertDialog.Builder(MainActivity.this)
+                                    .setTitle("上传提示")
+                                    .setMessage("没有读取到需要上传的数据，请确认是否有数据修改")
+                                    .setPositiveButton("确认", null)
+                                    .create().show();
+                        }
+                    });
+                    return;
+                }
+
+                // 分批上传
                 int pageSize = 800;
                 final int count = size / pageSize;
-                tip = tip + "共读取到" + meters.size() + "条数据，分" + (count + 1) + "部分上传\n";
+                tip = tip + "共读取到" + meters.size() + "条数据\n " +
+                        "需要上传共" + size + "条\n "
+                        + "分" + (count + 1) + "部分上传\n ";
 
                 for (int i = 0; i <= count; i++) {
                     List<Map<String, Object>> maps;
@@ -210,6 +237,7 @@ public class MainActivity extends BaseActivity {
                         showUploadDialog(finalTip, data);
                     }
                 });
+
             }
         }).start();
     }

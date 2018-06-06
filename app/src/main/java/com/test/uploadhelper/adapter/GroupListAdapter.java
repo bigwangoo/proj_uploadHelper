@@ -1,6 +1,7 @@
 package com.test.uploadhelper.adapter;
 
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
@@ -33,6 +34,16 @@ public class GroupListAdapter extends BaseQuickAdapter<Map<String, Object>, Base
             limitnum = item.get("LIMITNUM").toString();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        if (TextUtils.isEmpty(notebookid)) {
+            try {
+                notebookid = item.get("notebookid").toString();
+                groupid = item.get("groupid").toString();
+                groupname = item.get("groupname").toString();
+                limitnum = item.get("limitnum").toString();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         helper.setText(R.id.tvItem0, notebookid)

@@ -32,6 +32,9 @@ public class SharedPrefHelper {
         return instance;
     }
 
+    /**
+     * 服务器地址
+     */
     public String getServerUrl() {
         return sp.getString("server_url", SoapService.URL);
     }
@@ -40,6 +43,9 @@ public class SharedPrefHelper {
         sp.edit().putString("server_url", url).commit();
     }
 
+    /**
+     * 下载地址
+     */
     public String getDownloadUrl() {
         return sp.getString("download_url", SoapService.DOWN_URL);
     }
