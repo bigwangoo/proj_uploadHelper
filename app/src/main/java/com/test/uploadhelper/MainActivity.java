@@ -12,17 +12,19 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.test.uploadhelper.activity.AboutMeActivity;
 import com.test.uploadhelper.activity.BaseActivity;
 import com.test.uploadhelper.activity.PreviewActivity;
 import com.test.uploadhelper.activity.SettingActivity;
 import com.test.uploadhelper.common.service.SoapDataUtils;
 import com.test.uploadhelper.model.DownloadResult;
 import com.test.uploadhelper.model.HttpResult;
-import com.test.uploadhelper.utils.DbfUtils;
+import com.test.uploadhelper.utils.DbfReadUtils;
 import com.test.uploadhelper.utils.SharedPrefHelper;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.FileCallBack;
@@ -39,7 +41,7 @@ public class MainActivity extends BaseActivity {
 
     public static final String TAG = MainActivity.class.getSimpleName();
 
-    private TextView tvID, tvFilePath;
+    private TextView tvID, tvFilePath, tvVersion;
 
     private final Handler handler = new Handler();
     private SharedPrefHelper spHelper;
@@ -50,6 +52,28 @@ public class MainActivity extends BaseActivity {
     private String metersDownloadPath;
     private String noteBookGroupDownloadPath;
 
+    // 上传dialog
+    private AlertDialog uploadDialog;
+    // 上传结果
+    private String uploadResult = "";
+
+    // 下载前等待时间
+    private int waitingTime = 0;
+    // 下载前等待计时
+    private final Runnable waitingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    waitingTime += 1;
+                    setProgressBar("正在获取下载信息，请稍后... " + waitingTime + "s");
+                }
+            });
+            handler.postDelayed(this, 1000);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,9 +81,11 @@ public class MainActivity extends BaseActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        ImageView ivBack = (ImageView) findViewById(R.id.ivBack);
+        ivBack.setVisibility(View.GONE);
         TextView tvTitle = (TextView) findViewById(R.id.tvTitle);
         TextView tvRight = findViewById(R.id.tvRight);
-        tvTitle.setText("UploadHelper v" + getVersionName(this));
+        tvTitle.setText("UploadHelper");
         tvRight.setText("预览");
         tvRight.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,16 +101,37 @@ public class MainActivity extends BaseActivity {
 
         tvID = findViewById(R.id.tvID);
         tvFilePath = findViewById(R.id.tvFilePath);
+        tvVersion = findViewById(R.id.tvVersion);
+        tvVersion.setText("当前版本 v" + getVersionName(this) + " 点我查看说明");
+        tvVersion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, AboutMeActivity.class));
+            }
+        });
 
         // sp
         spHelper = SharedPrefHelper.getInstance();
+
+
+        // 上传结果显示
+        uploadDialog = new AlertDialog.Builder(MainActivity.this)
+                .setTitle("上传结果")
+                .setMessage(uploadResult)
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).create();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        checkPermissionDialog();
         setData();
+
+        checkPermissionDialog();
     }
 
     private void setData() {
@@ -141,6 +188,8 @@ public class MainActivity extends BaseActivity {
 
     /**
      * 上传数据
+     *
+     * @param view
      */
     public void onUploadClick(View view) {
         if (TextUtils.isEmpty(metersPath) || TextUtils.isEmpty(noteBookGroupPath)) {
@@ -148,7 +197,7 @@ public class MainActivity extends BaseActivity {
             return;
         }
 
-        setProgressBar("数据处理中...");
+        setProgressBar("数据处理中请稍等...");
 
         // 处理数据
         new Thread(new Runnable() {
@@ -162,7 +211,7 @@ public class MainActivity extends BaseActivity {
                 // 要上传的新数据
                 List<Map<String, Object>> newData = new ArrayList<>();
                 // 所有数据
-                List<Map<String, Object>> meters = DbfUtils.getMeters();
+                List<Map<String, Object>> meters = DbfReadUtils.getMeters();
                 // 抄表状态等于1
                 for (int i = 0; i < meters.size(); i++) {
                     Map<String, Object> map = meters.get(i);
@@ -177,7 +226,10 @@ public class MainActivity extends BaseActivity {
                         }
                         if ("1".equals(cbzt) || "1".equals(cbzt2)) {
                             newData.add(map);
-                            //Log.e(TAG, "run: " + cbzt);
+
+                            if (BuildConfig.DEBUG) {
+                                Log.e(TAG, "cbzt: " + cbzt);
+                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -185,12 +237,12 @@ public class MainActivity extends BaseActivity {
                 }
 
                 int size = newData.size();
+                // 无数据时
                 if (size <= 0) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             hideProgressBar();
-
                             new AlertDialog.Builder(MainActivity.this)
                                     .setTitle("上传提示")
                                     .setMessage("没有读取到需要上传的数据，请确认是否有数据修改")
@@ -201,21 +253,26 @@ public class MainActivity extends BaseActivity {
                     return;
                 }
 
-                // 分批上传
+                // 有数据时 分批上传
                 int pageSize = 800;
                 final int count = size / pageSize;
                 tip = tip + "共读取到" + meters.size() + "条数据\n " +
-                        "需要上传共" + size + "条\n "
-                        + "分" + (count + 1) + "部分上传\n ";
+                        "需要上传共" + size + "条，分" + (count + 1) + "部分上传\n ";
 
                 for (int i = 0; i <= count; i++) {
                     List<Map<String, Object>> maps;
                     if (i == count) {
                         maps = newData.subList(i * pageSize, size);
-                        // Log.e(TAG, "onUploadClick: " + i * pageSize + "-----" + size);
+
+                        if (BuildConfig.DEBUG) {
+                            Log.e(TAG, "onUploadClick: 区间[" + i * pageSize + "-" + size + "]");
+                        }
                     } else {
                         maps = newData.subList(i * pageSize, (i + 1) * pageSize);
-                        // Log.e(TAG, "onUploadClick: " + i * pageSize + "-----" + (i + 1) * pageSize);
+
+                        if (BuildConfig.DEBUG) {
+                            Log.e(TAG, "onUploadClick:  区间[" + i * pageSize + "-" + (i + 1) * pageSize + "]");
+                        }
                     }
                     // 构建上传Json数据
                     final int totalCounts = maps.size();
@@ -237,7 +294,6 @@ public class MainActivity extends BaseActivity {
                         showUploadDialog(finalTip, data);
                     }
                 });
-
             }
         }).start();
     }
@@ -246,7 +302,7 @@ public class MainActivity extends BaseActivity {
     private void showUploadDialog(String tip, final List<String> data) {
         // 上传数据
         new AlertDialog.Builder(this)
-                .setTitle("确认当前数据信息")
+                .setTitle("数据确认")
                 .setMessage(tip)
                 .setNegativeButton("取消", new DialogInterface.OnClickListener() {
                     @Override
@@ -258,11 +314,12 @@ public class MainActivity extends BaseActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        setProgressBar("数据上传中...");
+                        setProgressBar("数据上传中请稍等...");
                         // 延时上传
                         handler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
+                                // 1s后上传
                                 uploadReadData(data);
                             }
                         }, 1000);
@@ -277,40 +334,51 @@ public class MainActivity extends BaseActivity {
             return;
         }
 
-        String res = "";
+
         for (int i = 0; i < data.size(); i++) {
             String json = data.get(i);
+            final int finalI = i;
             // 上传
-            String result = SoapDataUtils.upLoadReadMsg(MainActivity.this, json);
-            final HttpResult httpResult = new Gson().fromJson(result, HttpResult.class);
+            SoapDataUtils.upLoadReadMsg(MainActivity.this, json, new SoapDataUtils.HttpResponseListener() {
 
-            if (httpResult != null) {
-                res = res + "第" + (i + 1) + "部分上传结果：" + httpResult.getOutMsg() + "\n";
-            } else {
-                res = res + "网络请求错误";
-            }
+                @Override
+                public void onPreExecute() {
+                    setProgressBar("数据上传中请稍等...");
+                }
+
+                @Override
+                public void onPostExecute(String resultJson) {
+                    String tempResult;
+                    HttpResult httpResult = new Gson().fromJson(resultJson, HttpResult.class);
+                    if (httpResult != null) {
+                        tempResult = "第" + (finalI + 1) + "部分上传结果：" + httpResult.getOutMsg() + "\n";
+                    } else {
+                        tempResult = "第" + (finalI + 1) + "部分上传结果：失败\n";
+                    }
+                    uploadResult += tempResult;
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            hideProgressBar();
+                            uploadDialog.setMessage(uploadResult);
+                            uploadDialog.show();
+                        }
+                    }, 1000);
+                }
+
+                @Override
+                public void onCancelled(String s) {
+                    hideProgressBar();
+                    Toast.makeText(MainActivity.this, "上传取消", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
-
-        final String finalRes = res;
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                hideProgressBar();
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("上传结果")
-                        .setMessage(finalRes)
-                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        }).create().show();
-            }
-        }, 1000);
     }
 
     /**
      * 下载数据
+     *
+     * @param view
      */
     public void onDownloadClick(View view) {
         if (TextUtils.isEmpty(id)) {
@@ -327,7 +395,8 @@ public class MainActivity extends BaseActivity {
         }
 
         new AlertDialog.Builder(MainActivity.this)
-                .setMessage("确认下载抄表人ID为：" + id + " 的数据文件吗？")
+                .setTitle("下载提示")
+                .setMessage("确认下载抄表人ID为：" + id + " 的数据文件吗？\n若刚刚上传数据，请稍等60s后再下载！")
                 .setNegativeButton("取消", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -337,48 +406,81 @@ public class MainActivity extends BaseActivity {
                 .setPositiveButton("确认", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-
-                        showProgressBar();
-
-                        // 获取下载信息
-                        String preReadMsg = SoapDataUtils.getPreReadMsg(MainActivity.this, id);
-                        // 解析结果
-                        final DownloadResult result = new Gson().fromJson(preReadMsg, DownloadResult.class);
-                        // 提示
-                        if (result != null) {
-                            // 提示
-                            if (result.getOutResult() == 1) {
-                                setProgressBar("获取成功正在准备下载...");
-
-                                final String downloadUrl = spHelper.getDownloadUrl();
-                                final String url1 = downloadUrl + result.getNoteBookGroupDbfName();
-                                final String url2 = downloadUrl + result.getMetersDbfName();
-                                // 延时下载
-                                handler.postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        downloadGroupFile(url1, url2);
-                                    }
-                                }, 1000);
-                            } else {
-                                new AlertDialog.Builder(MainActivity.this)
-                                        .setTitle("获取文件失败")
-                                        .setMessage(result.getOutMsg())
-                                        .setPositiveButton("确认", null)
-                                        .create().show();
-                            }
-                        } else {
-                            new AlertDialog.Builder(MainActivity.this)
-                                    .setTitle("获取文件失败")
-                                    .setMessage("网络请求错误")
-                                    .setPositiveButton("确认", null)
-                                    .create().show();
-                        }
+                        // 获取下载地址
+                        getDownloadInfo();
                     }
                 })
                 .create()
                 .show();
+    }
+
+    /*获取下载信息*/
+    private void getDownloadInfo() {
+        waitingTime = 0;
+        setProgressBar("正在获取下载信息，请稍后... " + waitingTime + "s");
+        handler.postDelayed(waitingRunnable, 1000);
+
+        // 获取下载信息
+        SoapDataUtils.getPreReadMsg(MainActivity.this, id, new SoapDataUtils.HttpResponseListener() {
+            @Override
+            public void onPreExecute() {
+
+            }
+
+            @Override
+            public void onPostExecute(String resultJson) {
+                // 移除计时
+                handler.removeCallbacks(waitingRunnable);
+
+                // 解析结果
+                DownloadResult result = new Gson().fromJson(resultJson, DownloadResult.class);
+                // 提示
+                if (result != null) {
+                    if (result.getOutResult() == 1) {
+                        setProgressBar("获取成功正在准备下载...");
+
+                        // 下载url
+                        final String downloadUrl = spHelper.getDownloadUrl();
+                        final String url1 = downloadUrl + result.getNoteBookGroupDbfName();
+                        final String url2 = downloadUrl + result.getMetersDbfName();
+                        // 延时下载
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                downloadGroupFile(url1, url2);
+                            }
+                        }, 1000);
+
+                    } else {
+                        hideProgressBar();
+
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("获取文件失败")
+                                .setMessage(result.getOutMsg())
+                                .setPositiveButton("确认", null)
+                                .create().show();
+                    }
+                } else {
+                    hideProgressBar();
+
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("获取文件失败")
+                            .setMessage("网络请求发生错误")
+                            .setPositiveButton("确认", null)
+                            .create().show();
+                }
+            }
+
+            @Override
+            public void onCancelled(String s) {
+                // 移除计时
+                handler.removeCallbacks(waitingRunnable);
+
+                hideProgressBar();
+
+                Toast.makeText(MainActivity.this, "下载取消", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /*下载文件1*/
@@ -396,41 +498,42 @@ public class MainActivity extends BaseActivity {
 
         final long timeMillis = System.currentTimeMillis();
         // 下载
-        OkHttpUtils.get().url(url1).build()
-                .execute(new FileCallBack(path, name) {
+        OkHttpUtils.get().url(url1).build().execute(new FileCallBack(path, name) {
+            @Override
+            public void onResponse(final File response, int id) {
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, "onResponse :" + response.getAbsolutePath());
+                }
+
+                long currentTimeMillis = System.currentTimeMillis();
+                int delay = currentTimeMillis - timeMillis < 2000 ? 2000 : 0;
+                handler.postDelayed(new Runnable() {
                     @Override
-                    public void onResponse(final File response, int id) {
-                        Log.e(TAG, "onResponse :" + response.getAbsolutePath());
-
-                        long currentTimeMillis = System.currentTimeMillis();
-                        int delay = currentTimeMillis - timeMillis < 2000 ? 2000 : 0;
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                downloadMeterFile(response.getAbsolutePath(), url2);
-                            }
-                        }, delay);
-                    }
-
-                    @Override
-                    public void inProgress(float progress, long total, int id) {
-                        super.inProgress(progress, total, id);
-                        setProgressBar(name + "下载中 " + (int) (100 * progress) + "%");
-                    }
-
-                    @Override
-                    public void onError(Call call, Exception e, int id) {
-                        Log.e(TAG, "onError :" + e.getMessage());
-                        // Toast.makeText(MainActivity.this, name + "下载失败", Toast.LENGTH_SHORT).show();
-
+                    public void run() {
                         hideProgressBar();
-                        new AlertDialog.Builder(MainActivity.this)
-                                .setTitle("下载失败")
-                                .setMessage(e.getMessage())
-                                .setPositiveButton("确认", null)
-                                .create().show();
+                        downloadMeterFile(response.getAbsolutePath(), url2);
                     }
-                });
+                }, delay);
+            }
+
+            @Override
+            public void inProgress(float progress, long total, int id) {
+                super.inProgress(progress, total, id);
+                setProgressBar(name + "下载中 " + (int) (100 * progress) + "%");
+            }
+
+            @Override
+            public void onError(Call call, Exception e, int id) {
+                Log.e(TAG, "onError :" + e.getMessage());
+
+                hideProgressBar();
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("下载失败")
+                        .setMessage(e.getMessage())
+                        .setPositiveButton("确认", null)
+                        .create().show();
+            }
+        });
     }
 
     /*下载文件2*/
@@ -448,53 +551,52 @@ public class MainActivity extends BaseActivity {
         }
 
         final long timeMillis = System.currentTimeMillis();
-        OkHttpUtils.get().url(url).build()
-                .execute(new FileCallBack(path, name) {
+        OkHttpUtils.get().url(url).build().execute(new FileCallBack(path, name) {
+            @Override
+            public void onResponse(final File response, int id) {
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, "onResponse :" + response.getAbsolutePath());
+                }
+
+                long currentTimeMillis = System.currentTimeMillis();
+                int delay = currentTimeMillis - timeMillis < 2000 ? 2000 : 0;
+                handler.postDelayed(new Runnable() {
                     @Override
-                    public void onResponse(final File response, int id) {
-                        Log.e(TAG, "onResponse :" + response.getAbsolutePath());
-                        //Toast.makeText(MainActivity.this, name + "下载成功", Toast.LENGTH_SHORT).show();
-
-                        long currentTimeMillis = System.currentTimeMillis();
-                        int delay = currentTimeMillis - timeMillis < 2000 ? 2000 : 0;
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                hideProgressBar();
-                            }
-                        }, delay);
-
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                new AlertDialog.Builder(MainActivity.this)
-                                        .setTitle("下载结果")
-                                        .setMessage("下载成功\n" + file1 + "\n" + response.getAbsolutePath())
-                                        .setPositiveButton("确定", null)
-                                        .create().show();
-                            }
-                        }, 1000);
-                    }
-
-                    @Override
-                    public void inProgress(float progress, long total, int id) {
-                        super.inProgress(progress, total, id);
-                        setProgressBar(name + "下载中" + (int) (100 * progress) + "%");
-                    }
-
-                    @Override
-                    public void onError(Call call, Exception e, int id) {
-                        Log.e(TAG, "onError :" + e.getMessage());
-                        // Toast.makeText(MainActivity.this, name + "下载失败", Toast.LENGTH_SHORT).show();
-
+                    public void run() {
                         hideProgressBar();
+                    }
+                }, delay);
+
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
                         new AlertDialog.Builder(MainActivity.this)
-                                .setTitle("下载失败")
-                                .setMessage(e.getMessage())
-                                .setPositiveButton("确认", null)
+                                .setTitle("下载结果")
+                                .setMessage("下载成功\n" + file1 + "\n" + response.getAbsolutePath())
+                                .setPositiveButton("确定", null)
                                 .create().show();
                     }
-                });
+                }, 1000);
+            }
+
+            @Override
+            public void inProgress(float progress, long total, int id) {
+                super.inProgress(progress, total, id);
+                setProgressBar(name + "下载中" + (int) (100 * progress) + "%");
+            }
+
+            @Override
+            public void onError(Call call, Exception e, int id) {
+                Log.e(TAG, "onError :" + e.getMessage());
+
+                hideProgressBar();
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("下载失败")
+                        .setMessage(e.getMessage())
+                        .setPositiveButton("确认", null)
+                        .create().show();
+            }
+        });
     }
 
     /**
@@ -510,5 +612,7 @@ public class MainActivity extends BaseActivity {
         }
         return "";
     }
+
+
     //static class  UploadDataTask extends AsyncTask
 }

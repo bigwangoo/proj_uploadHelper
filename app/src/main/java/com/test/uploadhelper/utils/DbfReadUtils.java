@@ -2,7 +2,7 @@ package com.test.uploadhelper.utils;
 
 import android.util.Log;
 
-import com.test.uploadhelper.common.jdbf.core.DbfMetadata;
+import com.test.uploadhelper.BuildConfig;
 import com.test.uploadhelper.common.jdbf.core.DbfRecord;
 import com.test.uploadhelper.common.jdbf.reader.DbfReader;
 
@@ -19,9 +19,9 @@ import java.util.Map;
  * @date 2018/5/23
  * @description description
  */
-public class DbfUtils {
+public class DbfReadUtils {
 
-    private static final String TAG = DbfUtils.class.getSimpleName();
+    private static final String TAG = DbfReadUtils.class.getSimpleName();
 
     private static String NoteBookGroup = "NoteBookGroup.dbf";
     private static String Meters = "Meters.dbf";
@@ -42,16 +42,22 @@ public class DbfUtils {
             InputStream dbf = new FileInputStream(new File(filePath));
             Charset stringCharset = Charset.forName("GBK");
 
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "DBF2List: " + filePath);
+            }
+
             DbfReader reader = new DbfReader(dbf);
             // DbfMetadata meta = reader.getMetadata();
-
             DbfRecord rec;
             while ((rec = reader.read()) != null) {
                 rec.setStringCharset(stringCharset);
                 Map<String, Object> map = rec.toMap();
                 data.add(map);
 
-                //Log.e(TAG, "DBF2List: " + rec.toMap());
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, "DBF2List: " + rec.toMap());
+                }
+
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,6 +1,9 @@
 package com.test.uploadhelper.common.jdbf.core;
 
 
+import android.util.Log;
+
+import com.test.uploadhelper.BuildConfig;
 import com.test.uploadhelper.common.jdbf.reader.MemoReader;
 import com.test.uploadhelper.common.jdbf.util.BitUtils;
 import com.test.uploadhelper.common.jdbf.util.JdbfUtils;
@@ -16,6 +19,7 @@ import java.util.Map;
 
 public class DbfRecord {
 
+    private static final String TAG = DbfRecord.class.getSimpleName();
     public static final String NUMERIC_OVERFLOW = "*";
 
     private byte[] bytes;
@@ -288,32 +292,32 @@ public class DbfRecord {
         for (DbfField f : getFields()) {
             String name = f.getName();
 
-            switch (f.getType()) {
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "getFields: " + name);
+            }
 
+            switch (f.getType()) {
                 case Character:
                     map.put(name, getString(name));
                     break;
-
                 case Date:
                     map.put(name, getDate(name));
                     break;
-
                 case Numeric:
                     map.put(name, getBigDecimal(name));
                     break;
-
                 case Logical:
                     map.put(name, getBoolean(name));
                     break;
-
                 case Integer:
                     map.put(name, getInteger(name));
                     break;
-
                 default:
+                    map.put(name, getString(name));
                     break;
             }
         }
         return map;
     }
+
 }

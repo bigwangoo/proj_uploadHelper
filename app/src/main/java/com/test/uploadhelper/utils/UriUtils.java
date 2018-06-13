@@ -10,6 +10,8 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import com.test.uploadhelper.BuildConfig;
+
 /**
  * @author wangyd
  * @date 2018/5/23
@@ -24,7 +26,11 @@ public class UriUtils {
         if ("file".equalsIgnoreCase(uri.getScheme())) {
             //使用第三方应用打开
             path = uri.getPath();
-            Log.e(TAG, "file: " + path);
+
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "file: " + path);
+            }
+
             return path;
         }
 
@@ -32,12 +38,16 @@ public class UriUtils {
             //4.4以后
             path = getPath(context, uri);
 
-            Log.e(TAG, "getPath: " + path);
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "getPath: " + path);
+            }
         } else {
             //4.4以下下系统调用方法
             path = getRealPathFromURI(context, uri);
 
-            Log.e(TAG, "getRealPathFromURI: " + path);
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "getRealPathFromURI: " + path);
+            }
         }
         return path;
     }

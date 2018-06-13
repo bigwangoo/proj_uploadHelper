@@ -2,9 +2,9 @@ package com.test.uploadhelper.common.service;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
+
+import com.test.uploadhelper.BuildConfig;
 
 import org.ksoap2.serialization.SoapObject;
 
@@ -25,54 +25,88 @@ public class SoapDataUtils {
     /**
      * 上传抄表数据
      */
-    public static String upLoadReadMsg(Context context, String strReadMsg) {
-        Log.e(TAG, "doInBackground: " + strReadMsg);
+    public static void upLoadReadMsg(Context context, String strReadMsg, HttpResponseListener responseListener) {
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG, "doInBackground: " + strReadMsg);
+        }
 
-        String result = "";
         try {
             SoapObject dataObject = new SoapObject(SoapService.Instance().getNameSpace(), UpLoadReadMsg);
             dataObject.addProperty("strReadMsg", strReadMsg);
-            result = new SoapDataTask(UpLoadReadMsg).execute(dataObject).get();
+            new SoapDataTask(UpLoadReadMsg, responseListener).execute(dataObject);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (TextUtils.isEmpty(result)) {
-            Toast.makeText(context, "网络请求出错", Toast.LENGTH_SHORT).show();
-        }
-        return result;
     }
 
     /**
      * 下载抄表数据请求
      */
-    public static String getPreReadMsg(Context context, String strMeterReaderID) {
-        Log.e(TAG, "doInBackground: " + strMeterReaderID);
+    public static void getPreReadMsg(Context context, String strMeterReaderID, HttpResponseListener responseListener) {
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG, "doInBackground: " + strMeterReaderID);
+        }
 
-        String result = "";
         try {
             SoapObject dataObject = new SoapObject(SoapService.Instance().getNameSpace(), GetPreReadMsg);
             dataObject.addProperty("strMeterReaderID", strMeterReaderID);
-            result = new SoapDataTask(GetPreReadMsg).execute(dataObject).get();
+            new SoapDataTask(GetPreReadMsg, responseListener).execute(dataObject);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (TextUtils.isEmpty(result)) {
-            Toast.makeText(context, "网络请求出错", Toast.LENGTH_SHORT).show();
-        }
-        return result;
     }
 
     static class SoapDataTask extends AsyncTask<SoapObject, Void, String> {
         String method = "";
+        HttpResponseListener responseListener;
 
-        public SoapDataTask(String method) {
+        public SoapDataTask(String method, HttpResponseListener responseListener) {
             this.method = method;
+            this.responseListener = responseListener;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            responseListener.onPreExecute();
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
         }
 
         @Override
         protected String doInBackground(SoapObject... soapObjects) {
+            //测试
+//            try {
+//                Thread.sleep(5 * 1000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+
             return SoapService.Instance().askForResult(soapObjects[0], method);
         }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            responseListener.onPostExecute(s);
+        }
+
+        @Override
+        protected void onCancelled(String s) {
+            super.onCancelled(s);
+            responseListener.onCancelled(s);
+        }
+    }
+
+    public interface HttpResponseListener {
+        void onPreExecute();
+
+        void onPostExecute(String resultJson);
+
+        void onCancelled(String s);
     }
 }
 

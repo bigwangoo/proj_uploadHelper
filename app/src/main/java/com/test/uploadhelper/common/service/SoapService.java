@@ -2,6 +2,7 @@ package com.test.uploadhelper.common.service;
 
 import android.util.Log;
 
+import com.test.uploadhelper.BuildConfig;
 import com.test.uploadhelper.utils.SharedPrefHelper;
 
 import org.ksoap2.SoapEnvelope;
@@ -52,7 +53,9 @@ public class SoapService {
     }
 
     public String askForResult(SoapObject paramObject, String methodName) {
-        Log.e(TAG, "askForResult: " + methodName);
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG, "askForResult: " + methodName);
+        }
 
         SoapObject result = null;
 
@@ -64,12 +67,15 @@ public class SoapService {
 
         String soapAction = SOAP_ACTION + methodName;
         URL = SharedPrefHelper.getInstance().getServerUrl();
-        HttpTransportSE transportSE = new HttpTransportSE(URL, 1 * 60 * 1000);
+        HttpTransportSE transportSE = new HttpTransportSE(URL, 60 * 60 * 1000);
         try {
             transportSE.debug = true;
             transportSE.call(soapAction, envelope);
             result = (SoapObject) envelope.bodyIn;
-            // Log.e(TAG, "askForResult: " + result);
+
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "askForResult: " + result);
+            }
         } catch (Exception e) {
             //调试用
             StringWriter sw = new StringWriter();

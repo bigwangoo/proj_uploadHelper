@@ -11,7 +11,8 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -27,7 +28,7 @@
                 android:padding="16dp">
 
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
                     android:text="配置参数预览："
@@ -79,7 +80,7 @@
                 android:id="@+id/btnUpload"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="36dp"
+                android:layout_marginTop="26dp"
                 android:background="@color/colorPrimary"
                 android:onClick="onUploadClick"
                 android:text="上传数据"
@@ -90,7 +91,7 @@
                 android:id="@+id/btnDownload"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="36dp"
+                android:layout_marginTop="26dp"
                 android:background="@color/colorPrimary"
                 android:onClick="onDownloadClick"
                 android:text="下载文件"
@@ -99,4 +100,13 @@
         </LinearLayout>
     </ScrollView>
 
+    <TextView
+        android:id="@+id/tvVersion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:text="当前版本 v1.0.0"
+        android:textColor="@android:color/darker_gray" />
 </LinearLayout>

@@ -7,11 +7,13 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.test.uploadhelper.R;
 import com.test.uploadhelper.adapter.GroupListAdapter;
-import com.test.uploadhelper.utils.DbfUtils;
+import com.test.uploadhelper.utils.DbfReadUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +39,13 @@ public class GroupPreviewActivity extends BaseActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        ImageView ivBack = (ImageView) findViewById(R.id.ivBack);
+        ivBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         TextView tvTitle = (TextView) findViewById(R.id.tvTitle);
         tvTitle.setText("数据预览");
 
@@ -59,7 +68,7 @@ public class GroupPreviewActivity extends BaseActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final List<Map<String, Object>> list = DbfUtils.getNoteBookGroup();
+                final List<Map<String, Object>> list = DbfReadUtils.getNoteBookGroup();
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
