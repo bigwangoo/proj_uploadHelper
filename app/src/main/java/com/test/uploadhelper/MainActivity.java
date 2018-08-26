@@ -41,7 +41,8 @@ public class MainActivity extends BaseActivity {
 
     public static final String TAG = MainActivity.class.getSimpleName();
 
-    private TextView tvID, tvFilePath, tvVersion;
+    private TextView tvID;
+    private TextView tvFilePath;
 
     private final Handler handler = new Handler();
     private SharedPrefHelper spHelper;
@@ -81,11 +82,21 @@ public class MainActivity extends BaseActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        TextView tvTitle = (TextView) findViewById(R.id.tvTitle);
+        tvTitle.setText("UploadHelper");
         ImageView ivBack = (ImageView) findViewById(R.id.ivBack);
         ivBack.setVisibility(View.GONE);
-        TextView tvTitle = (TextView) findViewById(R.id.tvTitle);
+        TextView tvLeft = (TextView) findViewById(R.id.tvLeft);
+        tvLeft.setVisibility(View.VISIBLE);
+        tvLeft.setText("说明");
+        tvLeft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, AboutMeActivity.class));
+            }
+        });
+
         TextView tvRight = findViewById(R.id.tvRight);
-        tvTitle.setText("UploadHelper");
         tvRight.setText("预览");
         tvRight.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -99,16 +110,11 @@ public class MainActivity extends BaseActivity {
             }
         });
 
+        TextView tvVersion = findViewById(R.id.tvVersion);
+        tvVersion.setText("当前版本 v" + getVersionName(this));
+
         tvID = findViewById(R.id.tvID);
         tvFilePath = findViewById(R.id.tvFilePath);
-        tvVersion = findViewById(R.id.tvVersion);
-        tvVersion.setText("当前版本 v" + getVersionName(this) + " 点我查看说明");
-        tvVersion.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, AboutMeActivity.class));
-            }
-        });
 
         // sp
         spHelper = SharedPrefHelper.getInstance();
@@ -334,7 +340,7 @@ public class MainActivity extends BaseActivity {
             return;
         }
 
-
+        uploadResult = "";
         for (int i = 0; i < data.size(); i++) {
             String json = data.get(i);
             final int finalI = i;

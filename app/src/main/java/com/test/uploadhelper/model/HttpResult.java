@@ -1,8 +1,11 @@
 package com.test.uploadhelper.model;
 
+import android.support.annotation.Keep;
+
 /**
  * Created by wangyd on 2018/5/28.
  */
+@Keep
 public class HttpResult {
 
     /**

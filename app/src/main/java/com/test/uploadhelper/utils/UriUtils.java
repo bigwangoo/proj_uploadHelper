@@ -23,55 +23,40 @@ public class UriUtils {
 
     public static String getPathFromUri(Context context, Uri uri) {
         String path;
+        //使用第三方应用打开
         if ("file".equalsIgnoreCase(uri.getScheme())) {
-            //使用第三方应用打开
             path = uri.getPath();
 
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, "file: " + path);
             }
-
             return path;
         }
-
+        //4.4以后
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-            //4.4以后
             path = getPath(context, uri);
 
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, "getPath: " + path);
             }
-        } else {
-            //4.4以下下系统调用方法
-            path = getRealPathFromURI(context, uri);
+        }
+        //4.4以下
+        else {
+            path = getDataColumn(context, uri, null, null);
 
             if (BuildConfig.DEBUG) {
-                Log.e(TAG, "getRealPathFromURI: " + path);
+                Log.e(TAG, "getDataColumn: " + path);
             }
         }
         return path;
     }
 
-    /**
-     * 4.4以下
-     */
-    private static String getRealPathFromURI(Context context, Uri contentUri) {
-        String res = null;
-        String[] proj = {MediaStore.Images.Media.DATA};
-        Cursor cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
-        if (null != cursor && cursor.moveToFirst()) {
-            res = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
-            cursor.close();
-        }
-        return res;
-    }
 
     /**
      * 4.4以上获取文件绝对路径
      */
     private static String getPath(final Context context, final Uri uri) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
-                && DocumentsContract.isDocumentUri(context, uri)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && DocumentsContract.isDocumentUri(context, uri)) {
             // DocumentProvider
             if (isExternalStorageDocument(uri)) {
                 // ExternalStorageProvider
@@ -85,8 +70,7 @@ public class UriUtils {
             } else if (isDownloadsDocument(uri)) {
                 // DownloadsProvider
                 String id = DocumentsContract.getDocumentId(uri);
-                Uri contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+                Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
                 return getDataColumn(context, contentUri, null, null);
 
             } else if (isMediaDocument(uri)) {
@@ -122,25 +106,27 @@ public class UriUtils {
     }
 
     /**
-     * Get the value of the data column for this Uri. This is useful for
-     * MediaStore Uris, and other file-based ContentProviders.
+     * 4.4以下
+     * Get the value of the data column for this Uri.
+     * This is useful for MediaStore Uris, and other file-based ContentProviders.
      */
     private static String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs) {
+        String res = null;
         Cursor cursor = null;
-        final String column = "_data";
-        final String[] projection = {column};
+        String[] proj = {MediaStore.Images.Media.DATA};
 
         try {
-            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
-            if (cursor != null && cursor.moveToFirst()) {
-                return cursor.getString(cursor.getColumnIndexOrThrow(column));
+            cursor = context.getContentResolver().query(uri, proj, selection, selectionArgs, null);
+            if (cursor != null && cursor.getCount() > 0 && cursor.moveToFirst()) {
+                res = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
             }
+        } catch (Exception ignored) {
         } finally {
             if (cursor != null) {
                 cursor.close();
             }
         }
-        return null;
+        return res;
     }
 
     /**

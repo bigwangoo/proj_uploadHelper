@@ -1,6 +1,8 @@
 package com.test.uploadhelper.activity;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,18 +10,27 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.test.uploadhelper.R;
-import com.test.uploadhelper.common.service.SoapService;
+import com.test.uploadhelper.model.AppConfig;
 import com.test.uploadhelper.utils.SharedPrefHelper;
 import com.test.uploadhelper.utils.UriUtils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 /**
  * Created by wangyd on 2018/5/27.
@@ -28,6 +39,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
 
     private static final String TAG = SettingActivity.class.getSimpleName();
 
+    public static final Integer RC_FILE_SELECT_CONFIG = 1001;
+
     public static final Integer RC_FILE_SELECT_METERS = 100;
     public static final Integer RC_FILE_SELECT_NOTE = 101;
     public static final Integer RC_FILE_SELECT_METERS_D = 102;
@@ -35,6 +48,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
 
     private SharedPrefHelper spHelper;
     private TextView tvID, tvGroup, tvMeters, tvGroupDownload, tvMetersDownload, tvServer, tvDownload;
+    private RelativeLayout rlHelper;
+    private ImageView ivHelperClose;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -81,6 +96,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         tvMetersDownload = findViewById(R.id.tvMetersDownload);
         tvServer = findViewById(R.id.tvServer);
         tvDownload = findViewById(R.id.tvDownload);
+        rlHelper = findViewById(R.id.rl_helper);
+        ivHelperClose = findViewById(R.id.iv_helper_close);
 
         findViewById(R.id.llID).setOnClickListener(this);
         findViewById(R.id.llGroup).setOnClickListener(this);
@@ -89,6 +106,8 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
         findViewById(R.id.llMetersDownload).setOnClickListener(this);
         findViewById(R.id.tvServer).setOnClickListener(this);
         findViewById(R.id.tvDownload).setOnClickListener(this);
+        findViewById(R.id.rl_helper).setOnClickListener(this);
+        findViewById(R.id.iv_helper_close).setOnClickListener(this);
 
         requestNecessaryPermission();
         setData();
@@ -117,6 +136,12 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.rl_helper:
+                showHelperDialog();
+                break;
+            case R.id.iv_helper_close:
+                rlHelper.setVisibility(View.GONE);
+                break;
             case R.id.llID:
                 onIdClick();
                 break;
@@ -142,6 +167,155 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
                 break;
         }
     }
+
+    private void showHelperDialog() {
+        String[] items = {"配置文件导入", "粘贴板导入"};
+        new AlertDialog.Builder(this)
+                .setTitle("请选择导入方式")
+                .setItems(items, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+
+                        if (which == 0) {
+                            // 选择配置
+                            onConfigPickClick(RC_FILE_SELECT_CONFIG);
+
+                        } else if (which == 1) {
+                            //对剪贴板文字的操作
+                            onConfigCopyClick();
+                        }
+
+                    }
+                }).create().show();
+    }
+
+    private void onConfigPickClick(int requestCode) {
+        if (!hasPermission()) {
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        try {
+            startActivityForResult(Intent.createChooser(intent, "请选择配置文件"), requestCode);
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(this, "请安装文件管理器", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String getConfigFromFile(String path) {
+        if (TextUtils.isEmpty(path)) {
+            Toast.makeText(this, "配置文件路径为空", Toast.LENGTH_SHORT).show();
+        }
+        FileInputStream in = null;
+        BufferedReader reader = null;
+        StringBuilder content = new StringBuilder();
+        try {
+            in = new FileInputStream(new File(path));
+            reader = new BufferedReader(new InputStreamReader(in));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return content.toString();
+    }
+
+    private void onConfigCopyClick() {
+        String content = null;
+        ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        ClipData data;
+        if (cm != null) {
+            data = cm.getPrimaryClip();
+            ClipData.Item item = data.getItemAt(0);
+            content = item.getText().toString();
+        }
+        setConfigInput(content);
+    }
+
+    private void setConfigInput(String json) {
+        if (TextUtils.isEmpty(json)) {
+            Toast.makeText(this, "没有获取到配置信息", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AppConfig config = null;
+
+        Gson gson = new Gson();
+        try {
+            config = gson.fromJson(json.trim(), AppConfig.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (config == null) {
+            Toast.makeText(this, "配置信息导入失败，请检查信息是否有误", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String userId = config.getUserId();
+        String pathNotebookGroup = config.getPathNotebookGroup();
+        String pathMeters = config.getPathMeters();
+        String pathDownloadNotebookGroup = config.getPathDownloadNotebookGroup();
+        String pathDownloadMeters = config.getPathDownloadMeters();
+        String serverUrl = config.getServerUrl();
+        String downloadUrl = config.getDownloadUrl();
+
+        if (TextUtils.isEmpty(pathNotebookGroup) ||
+                TextUtils.isEmpty(pathMeters) ||
+                TextUtils.isEmpty(pathDownloadNotebookGroup) ||
+                TextUtils.isEmpty(pathDownloadMeters) ||
+                TextUtils.isEmpty(serverUrl) ||
+                TextUtils.isEmpty(downloadUrl)) {
+
+            Toast.makeText(this, "配置参数不正确", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        spHelper.setID(emptyIfNull(userId));
+        spHelper.setNoteBookGroupPath(emptyIfNull(pathNotebookGroup));
+        spHelper.setMetersPath(emptyIfNull(pathMeters));
+        spHelper.setNoteBookGroupDownloadPath(emptyIfNull(pathDownloadNotebookGroup));
+        spHelper.setMetersDownloadPath(emptyIfNull(pathDownloadMeters));
+        spHelper.setServerUrl(emptyIfNull(serverUrl));
+        spHelper.setDownloadUrl(emptyIfNull(downloadUrl));
+
+        tvID.setText(emptyIfNull(userId));
+        tvGroup.setText(emptyIfNull(pathNotebookGroup));
+        tvMeters.setText(emptyIfNull(pathMeters));
+        tvGroupDownload.setText(emptyIfNull(pathDownloadNotebookGroup));
+        tvMetersDownload.setText(emptyIfNull(pathDownloadMeters));
+        tvServer.setText(emptyIfNull(serverUrl));
+        tvDownload.setText(emptyIfNull(downloadUrl));
+
+        Toast.makeText(this, "配置导入成功", Toast.LENGTH_SHORT).show();
+    }
+
+    private String emptyIfNull(String str) {
+        return str == null ? "" : str;
+    }
+
 
     private void onIdClick() {
         final View view = LayoutInflater.from(this).inflate(R.layout.layout_dialog_input, null);
@@ -231,7 +405,16 @@ public class SettingActivity extends BaseActivity implements View.OnClickListene
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == RC_FILE_SELECT_NOTE && resultCode == Activity.RESULT_OK) {
+        if (requestCode == RC_FILE_SELECT_CONFIG && resultCode == Activity.RESULT_OK) {
+            Uri uri = data.getData();
+            if (uri == null) {
+                return;
+            }
+            Log.e(TAG, "onActivityResult: " + uri.toString());
+            String path = UriUtils.getPathFromUri(this, uri);
+            setConfigInput(getConfigFromFile(path));
+
+        } else if (requestCode == RC_FILE_SELECT_NOTE && resultCode == Activity.RESULT_OK) {
             Uri uri = data.getData();
             if (uri == null) {
                 return;

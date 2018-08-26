@@ -1,10 +1,13 @@
 package com.test.uploadhelper.model;
 
+import android.support.annotation.Keep;
+
 /**
  * @author wangyd
  * @date 2018/5/23
  * @description description
  */
+@Keep
 public class NoteBookGroup {
 
     private String NOTEBOOKID;

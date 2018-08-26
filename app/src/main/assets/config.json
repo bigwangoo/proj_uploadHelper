@@ -1,0 +1,9 @@
+{
+  "userId": "1003",
+  "pathMeters": "/storage/emulated/0/Meters.dbf",
+  "pathNotebookGroup": "/storage/emulated/0/NoteBookGroup.dbf",
+  "pathDownloadMeters": "/storage/emulated/0",
+  "pathDownloadNotebookGroup": "/storage/emulated/0",
+  "serverUrl": "http://123.184.42.167:5588/WebServices.asmx",
+  "downloadUrl": "http://123.184.42.167:5588/DownFiles/"
+}
